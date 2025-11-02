@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class EventController {
     private final EventService eventService;
     @PostMapping
-    public EventDTO createEvent(@RequestBody EventDTO eventDTO) {
+    public String createEvent(@RequestBody EventDTO eventDTO) {
         EventDTO event = eventService.createEvent(eventDTO);
-        return event;
+        return "Event Created";
     }
 }
