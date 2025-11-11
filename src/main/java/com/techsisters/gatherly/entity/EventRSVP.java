@@ -1,5 +1,6 @@
 package com.techsisters.gatherly.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,7 +29,7 @@ public class EventRSVP {
 
     private String userEmail;
 
-    private Boolean rsvpStatus = true; // true = attending, false = cancelled
+    private boolean rsvpStatus;// true = attending, false = cancelled
 
     private LocalDateTime rsvpDate = LocalDateTime.now();
 }
