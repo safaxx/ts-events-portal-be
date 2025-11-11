@@ -1,6 +1,7 @@
 package com.techsisters.gatherly.mapper;
 
 import com.techsisters.gatherly.dto.EventDTO;
+import com.techsisters.gatherly.dto.EventRSVPDTO;
 import com.techsisters.gatherly.entity.Event;
 import com.techsisters.gatherly.entity.EventRSVP;
 import com.techsisters.gatherly.repository.EventRSVPRepository;
@@ -46,7 +47,7 @@ public class EventMapper {
 
     public List<EventDTO> getEvents(List<Event> events) {
         List<EventDTO> list = new ArrayList<>();
-        for(Event e: events){
+        for (Event e : events) {
             EventDTO dto = new EventDTO();
             dto.setTitle(e.getTitle());
             dto.setDescription(e.getDescription());
@@ -68,5 +69,36 @@ public class EventMapper {
     private Integer countAllRSVPs(Long eventId) {
         List<EventRSVP> rsvps = eventRSVPRepo.findAllByEvent_EventId(eventId);
         return rsvps.size();
+    }
+
+    public EventDTO getEventDetails(Event e) {
+        EventDTO dto = new EventDTO();
+        dto.setTitle(e.getTitle());
+        dto.setDescription(e.getDescription());
+        //event.setOrganizerEmail(e.getOrganizerEmail());
+        dto.setTimezone(e.getTimezone()); //convert to user's TZ and show
+        dto.setEventType(e.getEventType());
+        dto.setEventHostEmail(e.getEventHostEmail());
+        dto.setOrganizerEmail(e.getOrganizerEmail());
+        dto.setEventDateTime(e.getEventDateTime());
+        dto.setDuration(e.getDuration());
+        dto.setEventId(e.getEventId());
+        dto.setTags(e.getTags());
+        dto.setAllRSVPs(countAllRSVPs(e.getEventId()));
+        return dto;
+    }
+
+    public List<EventRSVPDTO> getRSVPs(List<EventRSVP> rsvps) {
+        List<EventRSVPDTO> list = new ArrayList<>();
+        for (EventRSVP e : rsvps) {
+            EventRSVPDTO dto = new EventRSVPDTO();
+            dto.setRsvpId(e.getRsvpId());
+            dto.setEventID(e.getEvent().getEventId());
+            dto.setUserEmail(e.getUserEmail());
+            dto.setRsvpStatus(e.isRsvpStatus());
+            dto.setRsvpDate(e.getRsvpDate());
+            list.add(dto);
+        }
+        return list;
     }
 }
