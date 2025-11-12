@@ -19,6 +19,7 @@ public class User extends AbstractAuditablePersistable {
 
     private String name;
     private int otp; // 6 digit code for verification
+    private Date otpCreatedDate;
 
     @Column(unique = true, nullable = false)
     private String email;
