@@ -1,13 +1,18 @@
 package com.techsisters.gatherly.service;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.integration.airtable.AirtableService;
 import com.techsisters.gatherly.integration.airtable.response.Record;
 import com.techsisters.gatherly.repository.UserRepository;
+import com.techsisters.gatherly.request.LoginRequest;
+import com.techsisters.gatherly.response.LoginResponse;
 import com.techsisters.gatherly.util.UserUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +26,65 @@ public class UserService {
     private final UserRepository userRepository;
     private final AirtableService airtableService;
     private final EmailService emailService;
+    private final UserDetailsService userDetailsService;
+    private final JwtService jwtService;
+
+    public LoginResponse authenticateUser(LoginRequest request) {
+        LoginResponse response = new LoginResponse();
+
+        try {
+            validateOTP(request.getEmail(), request.getOtp());
+
+            User user = findByEmail(request.getEmail());
+
+            // clear OTP after successful validation
+            user.setOtp(Integer.valueOf(0));
+            user.setOtpCreatedDate(null);
+            userRepository.save(user);
+
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+            // Generate the JWT
+            String jwtToken = jwtService.generateToken(userDetails.getUsername());
+
+            response.setSuccess(true);
+            response.setMessage("Login successful.");
+            response.setAccessToken(jwtToken);
+            response.setName(user.getName());
+            response.setEmail(userDetails.getUsername());
+            response.setCountry(user.getCountry());
+
+            log.info("Login successful for user: {}", request.getEmail());
+
+        } catch (Exception e) {
+            response.setSuccess(false);
+            response.setMessage("Error during authentication: " + e.getMessage());
+        }
+        return response;
+    }
+
+    public void validateOTP(String email, Integer otp) throws Exception {
+        User user = findByEmail(email);
+
+        if (user == null) {
+            throw new IllegalArgumentException("User with email " + email + " not found");
+        }
+
+        if (user.getOtp() == 0 || !otp.equals(user.getOtp())) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        Date otpCreatedDate = user.getOtpCreatedDate();
+        Date currentDate = new Date();
+
+        long timeDiff = currentDate.getTime() - otpCreatedDate.getTime();
+        long timeDiffInMinutes = TimeUnit.MINUTES.convert(timeDiff, TimeUnit.MILLISECONDS);
+
+        // OTP is valid for 10 minutes
+        if (timeDiffInMinutes > 10) {
+            throw new IllegalArgumentException("OTP has expired");
+        }
+
+    }
 
     /*
      * Check if user is a registered Techsisters member via Airtable
@@ -61,7 +125,6 @@ public class UserService {
 
         // send OTP email
         emailService.sendOtpEmail(email, user.getName(), String.valueOf(otp));
-       
 
         return otp;
     }
@@ -77,4 +140,5 @@ public class UserService {
 
         return userRepository.save(user);
     }
+
 }
