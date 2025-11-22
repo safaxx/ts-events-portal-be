@@ -16,9 +16,7 @@ public class EventRSVPRequest {
     private Long eventId;
 
     @Email(message = "Invalid email format")
-    @NotBlank(message = "User email is required")
-    @JsonProperty("user_email")
     private String userEmail;
 
-    private Boolean rsvp = true; // default true
+    private Boolean rsvp;
 }

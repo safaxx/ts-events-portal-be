@@ -11,6 +11,9 @@ import com.techsisters.gatherly.response.AllEventsResponse;
 import com.techsisters.gatherly.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +24,13 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-new")
-    public ResponseDTO createEvent(@Valid @RequestBody EventRequest eventRequest) {
+    public ResponseDTO createEvent(@Valid @RequestBody EventRequest eventRequest,
+                                   @AuthenticationPrincipal UserDetails userDetails) {
+
+        eventRequest.setCreatedBy(userDetails.getUsername());
+        eventRequest.setOrganizerEmail(userDetails.getUsername());
         Event event = eventService.createEvent(eventRequest);
         ResponseDTO response = new ResponseDTO();
         if(event != null){
@@ -33,12 +41,14 @@ public class EventController {
             response.setMessage("Event creation failed");
         }
         return response;
-
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PostMapping("/rsvp")
-    public ResponseDTO rsvpToEvent(@Valid @RequestBody EventRSVPRequest rsvpRequest) {
+    public ResponseDTO rsvpToEvent(@Valid @RequestBody EventRSVPRequest rsvpRequest,
+                                   @AuthenticationPrincipal UserDetails userDetails) {
         ResponseDTO response = new ResponseDTO();
+        rsvpRequest.setUserEmail(userDetails.getUsername());
         EventRSVP rsvp =  eventService.createRSVP(rsvpRequest);
         if(rsvp!=null ) {
             response.setSuccess(true);
@@ -50,9 +60,10 @@ public class EventController {
         return response;
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/my-rsvps")
-    public AllEventsResponse getUserRSVPs(@RequestParam String userEmail){
-        List<EventDTO> events = eventService.getUserRSVPs(userEmail);
+    public AllEventsResponse getUserRSVPs(@AuthenticationPrincipal UserDetails userDetails){
+        List<EventDTO> events = eventService.getUserRSVPs(userDetails.getUsername());
         AllEventsResponse response = new AllEventsResponse();
         if(events != null){
             response.setEvents(events);
@@ -66,6 +77,7 @@ public class EventController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all-rsvps")
     public List<EventRSVPDTO> getAllEventRSVPs(){
         return eventService.getAllEventsRSVPs();
