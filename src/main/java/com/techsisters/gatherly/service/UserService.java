@@ -1,5 +1,6 @@
 package com.techsisters.gatherly.service;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -88,7 +89,7 @@ public class UserService {
     }
 
     /*
-     * Check if user is a registered Techsisters member via Airtable
+     * Check if user is a registered Tech sisters member via Airtable
      * if valid generate 6-digit OTP and send to email
      */
     public Integer generateOTP(String email) throws Exception {
@@ -137,9 +138,23 @@ public class UserService {
         user.setName(record.getFields().getName());
         user.setEmail(record.getFields().getEmail());
         user.setCountry(record.getFields().getCountry());
-        user.setRoles(List.of("USER"));
+        if (isAdminEmail(user.getEmail())) {
+            user.setRole("ADMIN");
+        }else{
+            user.setRole("USER");
+        }
 
         return userRepository.save(user);
+    }
+
+    private boolean isAdminEmail(String email) {
+        // Hardcoded admin emails (or fetch from config/database)
+        List<String> adminEmails = Arrays.asList(
+                "safakhanx4@gmail.com",
+                "noor2005@gmail.com",
+                "admin@techsisters.com"
+        );
+        return adminEmails.contains(email.toLowerCase());
     }
 
 }

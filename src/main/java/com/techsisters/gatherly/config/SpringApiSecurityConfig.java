@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,12 +30,13 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SpringApiSecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
-    // ============================================
+        // ============================================
     // SECURITY FILTER CHAIN
     // ============================================
 
@@ -60,11 +62,10 @@ public class SpringApiSecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Whitelist your "send-otp" and other auth endpoints
-                        .requestMatchers("/auth/**").permitAll().requestMatchers("/public/events/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/public/events/**").permitAll()
                         // Whitelist static resources
                         .requestMatchers("/", "/index.html", "/static/**").permitAll()
-                        // --- SECURE (PRIVATE) ENDPOINTS ---
-                        // All other requests must be authenticated
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(new ApiAccessDeniedHandler())

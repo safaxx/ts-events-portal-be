@@ -17,7 +17,7 @@ public class EventRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Organizer email is required")
+//    @NotBlank(message = "Organizer email is required")
     @Email(message = "Invalid email format")
     @JsonProperty("organizer_email")
     private String organizerEmail;
@@ -44,5 +44,5 @@ public class EventRequest {
     private Integer duration;
 
 //    @JsonProperty("created_by")
-//    private String createdBy;
+    private String createdBy;
 }
