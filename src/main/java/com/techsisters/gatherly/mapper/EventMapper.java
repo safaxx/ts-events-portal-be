@@ -7,6 +7,7 @@ import com.techsisters.gatherly.entity.EventRSVP;
 import com.techsisters.gatherly.repository.EventRSVPRepository;
 import com.techsisters.gatherly.request.EventRequest;
 import com.techsisters.gatherly.util.DateUtil;
+import com.techsisters.gatherly.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -25,13 +27,15 @@ public class EventMapper {
 
         Event event = new Event();
         event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
+        event.setShortDescription(request.getShortDescription());
+        event.setLongDescription(request.getLongDescription());
         event.setOrganizerEmail(request.getOrganizerEmail());
         event.setTimezone(request.getTimezone());
         event.setEventType(request.getEventType());
         event.setEventHostEmail(request.getEventHostEmail());
-        //event.setEventLink(request.getEventLink());
-        //event.setCreatedBy(request.getCreatedBy());
+        event.setEventLink(request.getEventLink());
+        event.setEventLocation(request.getEventLocation());
+        event.setCreatedBy(request.getOrganizerEmail());
         event.setDuration(request.getDuration());
         event.setTags(request.getTags());
         event.setCreatedDate(LocalDateTime.now());
@@ -47,11 +51,13 @@ public class EventMapper {
 
     public List<EventDTO> getEvents(List<Event> events) {
         List<EventDTO> list = new ArrayList<>();
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+
         for (Event e : events) {
             EventDTO dto = new EventDTO();
             dto.setTitle(e.getTitle());
-            dto.setDescription(e.getDescription());
-            //event.setOrganizerEmail(e.getOrganizerEmail());
+            dto.setShortDescription(e.getShortDescription());
+            dto.setLongDescription(e.getLongDescription());
             dto.setTimezone(e.getTimezone()); //convert to user's TZ and show
             dto.setEventType(e.getEventType());
             dto.setEventHostEmail(e.getEventHostEmail());
@@ -60,7 +66,11 @@ public class EventMapper {
             dto.setDuration(e.getDuration());
             dto.setEventId(e.getEventId());
             dto.setTags(e.getTags());
+            dto.setCreatedBy(e.getCreatedBy());
             dto.setAllRSVPs(countAllRSVPs(e.getEventId()));
+            dto.setCurrentUserRSVP(checkUserRSVP(e, currentUserEmail));
+            dto.setEventLocation(e.getEventLocation());
+            dto.setEventLink(e.getEventLink());
             list.add(dto);
         }
         return list;
@@ -72,10 +82,12 @@ public class EventMapper {
     }
 
     public EventDTO getEventDetails(Event e) {
+        String currentUserEmail = SecurityUtil.getCurrentUserEmail();
+
         EventDTO dto = new EventDTO();
         dto.setTitle(e.getTitle());
-        dto.setDescription(e.getDescription());
-        //event.setOrganizerEmail(e.getOrganizerEmail());
+        dto.setShortDescription(e.getShortDescription());
+        dto.setLongDescription(e.getLongDescription());
         dto.setTimezone(e.getTimezone()); //convert to user's TZ and show
         dto.setEventType(e.getEventType());
         dto.setEventHostEmail(e.getEventHostEmail());
@@ -84,8 +96,21 @@ public class EventMapper {
         dto.setDuration(e.getDuration());
         dto.setEventId(e.getEventId());
         dto.setTags(e.getTags());
+        dto.setCreatedBy(e.getCreatedBy());
         dto.setAllRSVPs(countAllRSVPs(e.getEventId()));
+        dto.setEventLocation(e.getEventLocation());
+        dto.setEventLink(e.getEventLink());
+        // Check if current user has RSVP'd
+        dto.setCurrentUserRSVP(checkUserRSVP(e, currentUserEmail));
         return dto;
+    }
+
+    private Boolean checkUserRSVP(Event event, String currentUserEmail) {
+        if ("anonymous".equals(currentUserEmail)) {
+            return false;
+        }
+        Optional<EventRSVP> e = eventRSVPRepo.findByEventAndUserEmail(event, currentUserEmail);
+        return e.isPresent() && e.get().isRsvpStatus();
     }
 
     public List<EventRSVPDTO> getRSVPs(List<EventRSVP> rsvps) {

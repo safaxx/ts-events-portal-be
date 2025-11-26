@@ -30,13 +30,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        // Get the request URI to check if it's a public endpoint
+        String requestURI = request.getRequestURI();
+        boolean isPublicEndpoint = requestURI.contains("/public/") || requestURI.contains("/auth/");
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
 
         // Check for the Authorization header and "Bearer " prefix
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Pass to the next filter
+            // If it's a public endpoint and no token is provided, continue without authentication
+            if (isPublicEndpoint) {
+                log.debug("Public endpoint accessed without authentication: {}", requestURI);
+                filterChain.doFilter(request, response);
+                return;
+            }
+            // For protected endpoints, continue (Spring Security will handle unauthorized access)
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -69,6 +80,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
+            // If token is invalid or expired, log it but don't fail the request for public endpoints
+            if (isPublicEndpoint) {
+                log.warn("Invalid JWT token on public endpoint: {} - {}", requestURI, e.getMessage());
+                // Continue without authentication for public endpoints
+                filterChain.doFilter(request, response);
+                return;
+            }
+            // For protected endpoints, let the exception propagate
             log.error("JWT authentication failed: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
             return;

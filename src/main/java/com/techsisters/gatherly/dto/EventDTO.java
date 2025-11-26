@@ -1,5 +1,6 @@
 package com.techsisters.gatherly.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +13,8 @@ import java.time.OffsetDateTime;
 public class EventDTO {
     private Long eventId;
     private String title;
-    private String description;
+    private String shortDescription;
+    private String longDescription;
     private OffsetDateTime eventDateTime;
     private LocalDateTime createdDate = LocalDateTime.now();
     private String timezone;
@@ -22,4 +24,11 @@ public class EventDTO {
     private String eventType;
     private String eventHostEmail;
     private Integer allRSVPs;
+    private String createdBy;
+    private Boolean currentUserRSVP;
+    private String eventLink;
+    private String eventLocation;
+
+
+
 }

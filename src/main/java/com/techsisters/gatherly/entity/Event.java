@@ -1,5 +1,6 @@
 package com.techsisters.gatherly.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -21,28 +22,23 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long eventId;
-
     private String title;
 
-    private String description;
+    @Column(length = 200, nullable = false)
+    private String shortDescription;
 
+    @Column(columnDefinition = "TEXT")
+    private String longDescription;
     private OffsetDateTime eventDateTime;
-
-    private LocalDateTime createdDate = LocalDateTime.now(); // auto set
-
+    private LocalDateTime createdDate = LocalDateTime.now();
     private String timezone;
-
     private String eventType;
-
     private String eventHostEmail;
-
     private String organizerEmail;
-
     private String tags;
-
     private Integer duration;
-
     private String eventLink;
+    private String eventLocation;
     private String createdBy;
     private LocalDateTime updatedDate;
 

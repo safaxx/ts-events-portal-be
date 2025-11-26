@@ -30,7 +30,7 @@ public class AuthApiController {
         try {
             userService.generateOTP(request.getEmail());
             response.setSuccess(true);
-            response.setMessage("A 6-digit OTP has been sent to " + request.getEmail() + ".");
+            response.setMessage("A 6-digit OTP has been sent to your email.");
         } catch (Exception e) {
             log.error("Error while generating OTP: " + e.getMessage());
             response.setSuccess(false);

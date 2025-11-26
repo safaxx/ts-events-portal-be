@@ -8,6 +8,7 @@ import com.techsisters.gatherly.entity.EventRSVP;
 import com.techsisters.gatherly.request.EventRSVPRequest;
 import com.techsisters.gatherly.request.EventRequest;
 import com.techsisters.gatherly.response.AllEventsResponse;
+import com.techsisters.gatherly.response.UserCreatedEventsResponse;
 import com.techsisters.gatherly.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,6 @@ public class EventController {
         }else{
             response.setSuccess(false);
         }
-
         return response;
     }
 
@@ -81,5 +81,91 @@ public class EventController {
     @GetMapping("/all-rsvps")
     public List<EventRSVPDTO> getAllEventRSVPs(){
         return eventService.getAllEventsRSVPs();
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/my-created")
+    public UserCreatedEventsResponse getUserCreatedEvents(@AuthenticationPrincipal UserDetails userDetails){
+        UserCreatedEventsResponse response = new UserCreatedEventsResponse();
+        List<EventDTO> createdEvents =  eventService.getAllUserCreatedEvents(userDetails.getUsername());
+        if(createdEvents != null){
+            response.setEvents(createdEvents);
+            response.setMessage("Data retrieved successfully");
+            response.setSuccess(true);
+        }else{
+            response.setSuccess(false);
+            response.setMessage("No events found");
+        }
+        return response;
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/update")
+    public ResponseDTO updateEvent(
+            @RequestParam Long eventId,
+            @Valid @RequestBody EventRequest eventRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        ResponseDTO response = new ResponseDTO();
+
+        try {
+            String currentUserEmail = userDetails.getUsername();
+            eventService.validateEventEditPermission(eventId, currentUserEmail);
+            Event updatedEvent = eventService.updateEvent(eventId, eventRequest);
+            response.setSuccess(true);
+            response.setMessage("Event updated successfully");
+
+        } catch (IllegalArgumentException e) {
+            // Event not found or invalid data
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+        } catch (IllegalStateException e) {
+            // Permission or validation errors
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            // Unexpected errors
+            response.setSuccess(false);
+            response.setMessage("Error updating event: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/delete/{eventId}")
+    public ResponseDTO deleteEvent(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        ResponseDTO response = new ResponseDTO();
+
+        try {
+            String currentUserEmail = userDetails.getUsername();
+
+            // Validate edit permission (same rules apply for delete)
+            eventService.validateEventEditPermission(eventId, currentUserEmail);
+
+            // Delete the event
+            eventService.deleteEvent(eventId);
+
+            response.setSuccess(true);
+            response.setMessage("Event deleted successfully");
+
+        } catch (IllegalArgumentException e) {
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+        } catch (IllegalStateException e) {
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setSuccess(false);
+            response.setMessage("Error deleting event: " + e.getMessage());
+
+        }
+
+        return response;
     }
 }
