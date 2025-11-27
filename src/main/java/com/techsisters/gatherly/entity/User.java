@@ -1,14 +1,11 @@
 package com.techsisters.gatherly.entity;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-import jakarta.persistence.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +15,7 @@ import lombok.Setter;
 @Table(name = "techsister_user", indexes = {
         @Index(name = "idx_email", columnList = "email")
 })
-public class User extends AbstractAuditablePersistable{
+public class User extends AbstractAuditablePersistable {
 
     private String name;
     private int otp;
@@ -27,5 +24,10 @@ public class User extends AbstractAuditablePersistable{
     private String email;
     private String country;
     private String role;
+    private String state;
+
+    private String googleAccessToken;
+    private Date googleAccessTokenExpiry;
+    private String googleRefreshToken;
 
 }

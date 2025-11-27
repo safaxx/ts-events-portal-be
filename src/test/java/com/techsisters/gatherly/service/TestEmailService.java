@@ -21,7 +21,7 @@ public class TestEmailService {
 
     @Test
     public void test_sendOtpEmail() throws MessagingException, ResendException {
-        emailService.sendOtpEmail("noorsuho@gmail.com", "Noor", "123456");
+        emailService.sendOtpEmail("noor@innov8tif.com", "Noor", "123456");
     }
 
     @Test

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import com.techsisters.gatherly.entity.User;
@@ -134,13 +133,17 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    public User findByState(String state) {
+        return userRepository.findByState(state).orElse(null);
+    }
+
     public User copyAirtableData(User user, Record record) {
         user.setName(record.getFields().getName());
         user.setEmail(record.getFields().getEmail());
         user.setCountry(record.getFields().getCountry());
         if (isAdminEmail(user.getEmail())) {
             user.setRole("ADMIN");
-        }else{
+        } else {
             user.setRole("USER");
         }
 
@@ -152,9 +155,11 @@ public class UserService {
         List<String> adminEmails = Arrays.asList(
                 "safakhanx4@gmail.com",
                 "noor2005@gmail.com",
-                "admin@techsisters.com"
-        );
+                "admin@techsisters.com");
         return adminEmails.contains(email.toLowerCase());
     }
 
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
 }

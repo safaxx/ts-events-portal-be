@@ -10,10 +10,11 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import com.resend.Resend;
+import com.mailgun.api.v3.MailgunMessagesApi;
+import com.mailgun.client.MailgunClient;
+import com.mailgun.model.message.Message;
+import com.mailgun.model.message.MessageResponse;
 import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class EmailService {
 
-    @Value("${smtp.resend.apiKey}")
-    private String resendApiKey;
+    @Value("${smtp.mailgun.apiKey}")
+    private String mailgunApiKey;
+
+    @Value("${smtp.mailgun.domain}")
+    private String mailgunDomain;
 
     private final TemplateEngine templateEngine;
     private final JavaMailSender mailSender;
@@ -66,18 +70,19 @@ public class EmailService {
         String htmlBody = templateEngine.process(templateName, context); // This will find 'email-template.html' in
                                                                          // 'src/main/resources/templates/'
 
-        Resend resend = new Resend(resendApiKey);
+        MailgunMessagesApi mailgunMessagesApi = MailgunClient.config(mailgunApiKey)
+                .createApi(MailgunMessagesApi.class);
 
-        CreateEmailOptions sendEmailRequest = CreateEmailOptions.builder()
-                .from("techsisters-events@resend.dev")
+        Message message = Message.builder()
+                .from("noreply@" + mailgunDomain)
                 .to(to)
                 .subject(subject)
                 .html(htmlBody)
                 .build();
 
-        CreateEmailResponse data = resend.emails().send(sendEmailRequest);
+        MessageResponse response = mailgunMessagesApi.sendMessage(mailgunDomain, message);
 
-        log.info("Email sent with ID: {}", data.getId());
+        log.info("Email sent with ID: {}", response.getId());
     }
 
 }

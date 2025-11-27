@@ -46,7 +46,7 @@ public class SpringApiSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
-        // ============================================
+    // ============================================
     // SECURITY FILTER CHAIN
     // ============================================
 
@@ -74,6 +74,7 @@ public class SpringApiSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Whitelist your "send-otp" and other auth endpoints
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/oauth2callback/**").permitAll()
                         .requestMatchers("/public/events/**").permitAll()
                         // Whitelist static resources
                         .requestMatchers("/", "/index.html", "/static/**").permitAll()
