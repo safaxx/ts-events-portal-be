@@ -145,9 +145,9 @@ public class EventController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/delete/{eventId}")
+    @DeleteMapping("/delete")
     public ResponseDTO deleteEvent(
-            @PathVariable Long eventId,
+            @RequestParam Long eventId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         ResponseDTO response = new ResponseDTO();
