@@ -41,6 +41,7 @@ public class Event {
     private String eventLocation;
     private String createdBy;
     private LocalDateTime updatedDate;
+    private String eventHostName;
 
 //    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<EventRSVP> rsvps = new ArrayList<>();

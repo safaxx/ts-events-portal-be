@@ -4,7 +4,9 @@ import com.techsisters.gatherly.dto.EventDTO;
 import com.techsisters.gatherly.dto.EventRSVPDTO;
 import com.techsisters.gatherly.entity.Event;
 import com.techsisters.gatherly.entity.EventRSVP;
+import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.repository.EventRSVPRepository;
+import com.techsisters.gatherly.repository.UserRepository;
 import com.techsisters.gatherly.request.EventRequest;
 import com.techsisters.gatherly.util.DateUtil;
 import com.techsisters.gatherly.util.SecurityUtil;
@@ -22,6 +24,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EventMapper {
     private final EventRSVPRepository eventRSVPRepo;
+    private final UserRepository userRepository;
+
+    private String getUserName(String useremail){
+        Optional<User> user = userRepository.findByEmail(useremail);
+        if(user.isPresent()) return user.get().getName();
+        return "";
+    }
 
     public Event convertToEntity(EventRequest request) {
 
@@ -33,9 +42,10 @@ public class EventMapper {
         event.setTimezone(request.getTimezone());
         event.setEventType(request.getEventType());
         event.setEventHostEmail(request.getEventHostEmail());
+        event.setEventHostName(request.getEventHostName());
         event.setEventLink(request.getEventLink());
         event.setEventLocation(request.getEventLocation());
-        event.setCreatedBy(request.getOrganizerEmail());
+        event.setCreatedBy(request.getCreatedBy());
         event.setDuration(request.getDuration());
         event.setTags(request.getTags());
         event.setCreatedDate(LocalDateTime.now());
@@ -61,6 +71,7 @@ public class EventMapper {
             dto.setTimezone(e.getTimezone()); //convert to user's TZ and show
             dto.setEventType(e.getEventType());
             dto.setEventHostEmail(e.getEventHostEmail());
+            dto.setEventHostName(e.getEventHostName());
             dto.setOrganizerEmail(e.getOrganizerEmail());
             dto.setEventDateTime(e.getEventDateTime());
             dto.setDuration(e.getDuration());
@@ -93,6 +104,7 @@ public class EventMapper {
         dto.setEventHostEmail(e.getEventHostEmail());
         dto.setOrganizerEmail(e.getOrganizerEmail());
         dto.setEventDateTime(e.getEventDateTime());
+        dto.setEventHostName(e.getEventHostName());
         dto.setDuration(e.getDuration());
         dto.setEventId(e.getEventId());
         dto.setTags(e.getTags());

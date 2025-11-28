@@ -23,6 +23,7 @@ public class EventDTO {
     private Integer duration;
     private String eventType;
     private String eventHostEmail;
+    private String eventHostName;
     private Integer allRSVPs;
     private String createdBy;
     private Boolean currentUserRSVP;
