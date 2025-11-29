@@ -25,6 +25,12 @@ With Gatherly, users can:
 - **PostgreSQL** – Database  
 - **Deployment** – Render
 
+### 💻 Technical Details
+Below are the integration services used in the app:
+- **Airtable API integration**: Used during authentication to verify if the input email is a valid tech sister user
+- **Mail gun Email API**: Used to send OTP email during login
+- **Google OAuth/Calendar**: Used to allow the user to add the event to their personal gmail calendar
+
 #### AI Code Assist tools used:
 - Gemini
 - Claude AI
