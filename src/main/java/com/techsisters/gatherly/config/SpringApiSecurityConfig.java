@@ -76,6 +76,7 @@ public class SpringApiSecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2callback/**").permitAll()
                         .requestMatchers("/public/events/**").permitAll()
+                        .requestMatchers("/error/**").permitAll()
                         // Whitelist static resources
                         .requestMatchers("/", "/index.html", "/static/**").permitAll()
                         .anyRequest().authenticated())
