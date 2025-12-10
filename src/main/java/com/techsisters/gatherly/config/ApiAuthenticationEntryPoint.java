@@ -12,7 +12,9 @@ import com.techsisters.gatherly.util.CommonUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     // 401: This is for users who are not authenticated (e.g., they provided no
@@ -21,6 +23,7 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
+        log.info("Unauthorized access attempted: {}", authException.getMessage());
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
 

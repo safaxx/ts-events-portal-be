@@ -1,12 +1,13 @@
 package com.techsisters.gatherly.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+
+import com.techsisters.gatherly.util.GoogleCalendarUtil;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -30,6 +31,18 @@ public class EventDTO {
     private String eventLink;
     private String eventLocation;
 
+    private String googleCalendarLink;
 
+    public String getGoogleCalendarLink() {
+        String link = googleCalendarLink;
+        if (link == null) {
+            ZonedDateTime startDateTimeUTC = eventDateTime.toZonedDateTime();
+            ZonedDateTime endDateTimeUTC = startDateTimeUTC.plusMinutes(duration);
+            link = GoogleCalendarUtil.generateLink(title, shortDescription, eventLocation, startDateTimeUTC,
+                    endDateTimeUTC);
+            googleCalendarLink = link;
+        }
+        return googleCalendarLink;
+    }
 
 }

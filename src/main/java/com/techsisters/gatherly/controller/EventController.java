@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,13 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/events")
-public class EventController {
+public class EventController extends ValidationExceptionHandler {
     private final EventService eventService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-new")
     public ResponseDTO createEvent(@Valid @RequestBody EventRequest eventRequest,
             @AuthenticationPrincipal UserDetails userDetails) {
+
+        log.info("EventController| createEvent| userDetails {}", userDetails.getUsername());
 
         eventRequest.setCreatedBy(userDetails.getUsername());
         eventRequest.setOrganizerEmail(userDetails.getUsername());
