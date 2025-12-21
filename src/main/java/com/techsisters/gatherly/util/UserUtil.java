@@ -39,8 +39,13 @@ public class UserUtil {
      * @return A 6-digit string code.
      */
     public static int generate6DigitCode() {
+
         // Generate a random integer from 0 to 999,999
-        return SECURE_RANDOM.nextInt(1_000_000);
+        int randomNum = SECURE_RANDOM.nextInt(1_000_000);
+
+        // Format the number as a six-digit string with leading zeros
+        int sixDigitCode = Integer.parseInt(String.format("%06d", randomNum));
+        return sixDigitCode;
     }
 
 }
