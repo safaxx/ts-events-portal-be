@@ -12,6 +12,8 @@ import com.techsisters.gatherly.util.DateUtil;
 import com.techsisters.gatherly.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -67,8 +69,8 @@ public class EventMapper {
             EventDTO dto = new EventDTO();
             dto.setTitle(e.getTitle());
             dto.setShortDescription(e.getShortDescription());
-            dto.setLongDescription(e.getLongDescription());
-            dto.setTimezone(e.getTimezone()); //convert to user's TZ and show
+            //dto.setLongDescription(e.getLongDescription());
+            dto.setTimezone(e.getTimezone());
             dto.setEventType(e.getEventType());
             dto.setEventHostEmail(e.getEventHostEmail());
             dto.setEventHostName(e.getEventHostName());

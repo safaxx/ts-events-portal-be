@@ -9,14 +9,12 @@ import com.techsisters.gatherly.repository.EventRSVPRepository;
 import com.techsisters.gatherly.repository.EventRepository;
 import com.techsisters.gatherly.request.EventRSVPRequest;
 import com.techsisters.gatherly.request.EventRequest;
-import com.techsisters.gatherly.response.AllEventsResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,9 +30,11 @@ public class EventService {
         return eventRepository.save(event);
     }
 
-    public List<EventDTO> getAllEvents() {
-        List<Event> events = eventRepository.findAll();
-        return eventMapper.getEvents(events);
+    public Page<EventDTO> getAllEvents(int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime").descending());
+        Page<Event> events = eventRepository.findAll(paging);
+        List<EventDTO> eventDTOs = eventMapper.getEvents(events.getContent());
+        return new PageImpl<>(eventDTOs, paging, events.getTotalElements());
     }
     public EventRSVP createRSVP(EventRSVPRequest request) {
         Event event = eventRepository.findById(request.getEventId())

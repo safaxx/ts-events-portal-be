@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -98,11 +99,19 @@ public class PublicEventController {
     }
 
     @GetMapping("/all")
-    public AllEventsResponse getAllEvents() {
-        List<EventDTO> events = eventService.getAllEvents();
+    public AllEventsResponse getAllEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+
+        Page<EventDTO> eventsPage = eventService.getAllEvents(page, size);
         AllEventsResponse response = new AllEventsResponse();
-        if (events != null) {
-            response.setEvents(events);
+
+        if (eventsPage != null && eventsPage.hasContent()) {
+            response.setEvents(eventsPage.getContent());
+            response.setTotalPages(eventsPage.getTotalPages());
+            response.setTotalElements(eventsPage.getTotalElements());
+            response.setCurrentPage(eventsPage.getNumber());
+            response.setPageSize(eventsPage.getSize());
             response.setMessage("Data returned successfully");
             response.setSuccess(true);
         } else {
@@ -111,7 +120,6 @@ public class PublicEventController {
         }
         return response;
     }
-
     @GetMapping("/id")
     public EventDetailsResponse getEventDetails(@RequestParam Long eventId) {
         EventDetailsResponse response = new EventDetailsResponse();
