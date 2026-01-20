@@ -110,8 +110,8 @@ public class UserService {
                 log.info("User data saved/updated in DB: {}", user.getId());
 
             } else {
-                log.info("User with email {} is not a Tech-Sisters member", email);
-                throw new IllegalArgumentException("User " + email + " is not a Tech_Sisters member");
+                log.info("User with email {} is not a Tech Sisters member", email);
+                throw new IllegalArgumentException("User " + email + " is not a Tech Sisters member");
             }
         } else {
             log.info("User with email {} already exists in DB", email);

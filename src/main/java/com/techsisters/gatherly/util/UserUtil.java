@@ -40,12 +40,8 @@ public class UserUtil {
      */
     public static int generate6DigitCode() {
 
-        // Generate a random integer from 0 to 999,999
-        int randomNum = SECURE_RANDOM.nextInt(1_000_000);
-
-        // Format the number as a six-digit string with leading zeros
-        int sixDigitCode = Integer.parseInt(String.format("%06d", randomNum));
-        return sixDigitCode;
+        // Generates a number between 100,000 and 999,999
+        return 100_000 + SECURE_RANDOM.nextInt(900_000);
     }
 
 }
