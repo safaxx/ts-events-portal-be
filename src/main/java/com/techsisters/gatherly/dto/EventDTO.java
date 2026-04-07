@@ -12,6 +12,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class EventDTO {
+
+    public static enum ListType {
+        UPCOMING, PAST
+    }
+
     private Long eventId;
     private String title;
     private String shortDescription;

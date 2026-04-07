@@ -2,7 +2,6 @@ package com.techsisters.gatherly.controller;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -101,9 +100,10 @@ public class PublicEventController {
     @GetMapping("/all")
     public AllEventsResponse getAllEvents(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "UPCOMING") EventDTO.ListType listType, @RequestParam String searchQuery) {
 
-        Page<EventDTO> eventsPage = eventService.getAllEvents(page, size);
+        Page<EventDTO> eventsPage = eventService.getAllEvents(page, size, listType, searchQuery);
         AllEventsResponse response = new AllEventsResponse();
 
         if (eventsPage != null && eventsPage.hasContent()) {
@@ -120,6 +120,7 @@ public class PublicEventController {
         }
         return response;
     }
+
     @GetMapping("/id")
     public EventDetailsResponse getEventDetails(@RequestParam Long eventId) {
         EventDetailsResponse response = new EventDetailsResponse();
