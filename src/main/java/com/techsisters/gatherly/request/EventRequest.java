@@ -68,7 +68,10 @@ public class EventRequest {
         private Integer duration;
 
         @JsonProperty("tags")
-        @Pattern(regexp = "^[\\w-]+(?:,\\s*[\\w-]+)*$", message = "Tags cannot have trailing commas")
+        @Pattern(
+                regexp = "^[\\w-]+(?:[ ][\\w-]+)*(?:,\\s*[\\w-]+(?:[ ][\\w-]+)*)*$",
+                message = "Enter tags separated by commas without trailing commas"
+        )
         @Length(max = 200, message = "Tags cannot exceed 200 characters")
         private String tags;
 
