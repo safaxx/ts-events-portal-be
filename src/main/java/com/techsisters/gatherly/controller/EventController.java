@@ -178,6 +178,7 @@ public class EventController extends ValidationExceptionHandler {
             response.setSuccess(false);
             response.setMessage(e.getMessage());
         } catch (Exception e) {
+
             response.setSuccess(false);
             response.setMessage("Error deleting event: " + e.getMessage());
 
