@@ -75,14 +75,16 @@ public class EventService {
         return eventMapper.getEventDetails(event);
     }
 
-    public List<EventDTO> getUserRSVPs(String userEmail, int pageNo, int pageSize) {
+    public Page<EventDTO> getUserRSVPs(String userEmail, int pageNo, int pageSize) {
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("rsvpDate").descending());
 
         Page<EventRSVP> eventRSVPs = eventRSVPRepository.findByUserEmailAndRsvpStatus(userEmail, true, paging);
         List<Long> eventIDs = eventRSVPs.getContent().stream().map(e -> e.getEvent().getEventId()).toList();
 
         List<Event> events = eventRepository.findByEventIdIn(eventIDs);
-        return eventMapper.getEvents(events);
+        List<EventDTO> eventDTOs = eventMapper.getEvents(events);
+
+        return new PageImpl<>(eventDTOs, paging, eventRSVPs.getTotalElements());
     }
 
     public List<EventRSVPDTO> getAllEventsRSVPs() {
@@ -90,11 +92,14 @@ public class EventService {
         return eventMapper.getRSVPs(rsvps);
     }
 
-    public List<EventDTO> getAllUserCreatedEvents(String username, int pageNo, int pageSize) {
+    public Page<EventDTO> getAllUserCreatedEvents(String username, int pageNo, int pageSize) {
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime").descending());
 
         Page<Event> events = eventRepository.findByCreatedBy(username, paging);
-        return eventMapper.getEvents(events.getContent());
+        List<Event> eventList = events.getContent();
+
+        List<EventDTO> eventDTOs = eventMapper.getEvents(eventList);
+        return new PageImpl<>(eventDTOs, paging, events.getTotalElements());
     }
 
     /**

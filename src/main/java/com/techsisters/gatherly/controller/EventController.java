@@ -2,6 +2,7 @@ package com.techsisters.gatherly.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -79,10 +80,14 @@ public class EventController extends ValidationExceptionHandler {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size) {
 
-        List<EventDTO> events = eventService.getUserRSVPs(userDetails.getUsername(), page, size);
+        Page<EventDTO> eventsPage = eventService.getUserRSVPs(userDetails.getUsername(), page, size);
         AllEventsResponse response = new AllEventsResponse();
-        if (events != null) {
-            response.setEvents(events);
+        if (eventsPage != null && eventsPage.hasContent()) {
+            response.setEvents(eventsPage.getContent());
+            response.setTotalPages(eventsPage.getTotalPages());
+            response.setTotalElements(eventsPage.getTotalElements());
+            response.setCurrentPage(eventsPage.getNumber());
+            response.setPageSize(eventsPage.getSize());
             response.setMessage("Data returned successfully");
             response.setSuccess(true);
         } else {
@@ -106,10 +111,14 @@ public class EventController extends ValidationExceptionHandler {
             @RequestParam(defaultValue = "6") int size) {
 
         UserCreatedEventsResponse response = new UserCreatedEventsResponse();
-        List<EventDTO> createdEvents = eventService.getAllUserCreatedEvents(userDetails.getUsername(), page, size);
-        if (createdEvents != null) {
-            response.setEvents(createdEvents);
-            response.setMessage("Data retrieved successfully");
+        Page<EventDTO> eventsPage = eventService.getAllUserCreatedEvents(userDetails.getUsername(), page, size);
+        if (eventsPage != null && eventsPage.hasContent()) {
+            response.setEvents(eventsPage.getContent());
+            response.setTotalPages(eventsPage.getTotalPages());
+            response.setTotalElements(eventsPage.getTotalElements());
+            response.setCurrentPage(eventsPage.getNumber());
+            response.setPageSize(eventsPage.getSize());
+            response.setMessage("Data returned successfully");
             response.setSuccess(true);
         } else {
             response.setSuccess(false);
