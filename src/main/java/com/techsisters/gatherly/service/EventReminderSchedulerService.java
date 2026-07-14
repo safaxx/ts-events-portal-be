@@ -1,8 +1,9 @@
 package com.techsisters.gatherly.service;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -13,10 +14,12 @@ import com.resend.core.exception.ResendException;
 import com.techsisters.gatherly.entity.Event;
 import com.techsisters.gatherly.entity.EventRSVP;
 import com.techsisters.gatherly.entity.User;
+import com.techsisters.gatherly.integration.whapi.service.WhatsappChannelService;
 import com.techsisters.gatherly.repository.EventRSVPRepository;
 import com.techsisters.gatherly.repository.EventRepository;
 import com.techsisters.gatherly.repository.UserRepository;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,10 @@ public class EventReminderSchedulerService {
     private final EventRSVPRepository eventRSVPRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final WhatsappChannelService whatsappChannelService;
+    private final EventService eventService;
+
+    private static final String TECH_SISTERS_EVENTS_URL = "https://www.tech-sisters.com/events";
 
     // Run every 5 minutes
     @Scheduled(cron = "0 */5 * * * *")
@@ -38,27 +45,44 @@ public class EventReminderSchedulerService {
 
         try {
             OffsetDateTime now = OffsetDateTime.now();
-            OffsetDateTime thirtyMinutesFromNow = now.plusMinutes(30);
-            OffsetDateTime thirtyFiveMinutesFromNow = now.plusMinutes(35);
+            OffsetDateTime oneHourFromNow = now.plusHours(1);
 
-            // Find events starting in the next 30-35 minutes
-            List<Event> upcomingEvents = eventRepository.findAll().stream()
-                    .filter(event -> {
-                        OffsetDateTime eventTime = event.getEventDateTime();
-                        return eventTime.isAfter(thirtyMinutesFromNow) &&
-                                eventTime.isBefore(thirtyFiveMinutesFromNow);
-                    })
-                    .toList();
-
-            log.info("Found {} events starting in 30-35 minutes", upcomingEvents.size());
+            List<Event> upcomingEvents = eventService.getEventsForReminder(now, oneHourFromNow);
+            log.info("Found {} events starting in 60 minutes", upcomingEvents.size());
 
             for (Event event : upcomingEvents) {
                 sendRemindersForEvent(event);
+                sendWhatsappNotification(event);
+
+                event.setReminderSent(true);
+                eventRepository.save(event);
             }
 
         } catch (Exception e) {
             log.error("Error in event reminder scheduler: {}", e.getMessage(), e);
         }
+    }
+
+    private void sendWhatsappNotification(Event event) {
+        log.info("Sending Whatsapp msg for event: {} (ID: {})", event.getTitle(), event.getEventId());
+
+        String timeLeft = getTimeLeft(event.getEventDateTime());
+
+        StringBuilder body = new StringBuilder();
+        body.append("🔔 *").append(event.getTitle()).append("* is starting in ").append(timeLeft).append("\n\n");
+        body.append(event.getShortDescription()).append("\n\n");
+
+        body.append("📅 ").append(formatEventDateTime(event.getEventDateTime(), event.getTimezone()))
+                .append("\n");
+
+        body.append("🔗 ").append(StringUtils.isNotBlank(event.getEventLink()) ? event.getEventLink() : "N/A")
+                .append("\n\n");
+
+        // Events Portal link
+        body.append("🚀 Check out our upcoming events here:\n")
+                .append(TECH_SISTERS_EVENTS_URL);
+
+        whatsappChannelService.sendMsgToGroup(body.toString());
     }
 
     private void sendRemindersForEvent(Event event) {
@@ -89,8 +113,7 @@ public class EventReminderSchedulerService {
                         event.getEventType(),
                         event.getEventLocation(),
                         event.getEventLink(),
-                        event.getDuration()
-                );
+                        event.getDuration());
 
                 log.info("Sent reminder email to {} for event: {}", user.getEmail(), event.getTitle());
 
@@ -107,13 +130,39 @@ public class EventReminderSchedulerService {
     private String formatEventDateTime(OffsetDateTime eventDateTime, String timezone) {
         try {
             ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
-            LocalDateTime localDateTime = eventDateTime.atZoneSameInstant(zoneId).toLocalDateTime();
+            ZonedDateTime zonedDateTime = eventDateTime.atZoneSameInstant(zoneId);
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy 'at' hh:mm a");
-            return localDateTime.format(formatter);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy 'at' hh:mm a (O)");
+            return zonedDateTime.format(formatter);
         } catch (Exception e) {
             log.warn("Error formatting date time, using default: {}", e.getMessage());
             return eventDateTime.toString();
         }
+    }
+
+    private String getTimeLeft(OffsetDateTime eventDateTime) {
+
+        Duration duration = Duration.between(OffsetDateTime.now(), eventDateTime);
+        long minutes = duration.toMinutes();
+        String timeLeft = "";
+        if (minutes <= 0) {
+            timeLeft = "a few moments";
+        } else if (minutes == 1) {
+            timeLeft = "1 minute";
+        } else if (minutes < 60) {
+            timeLeft = minutes + " minutes";
+        } else {
+            long hours = minutes / 60;
+            long remainingMinutes = minutes % 60;
+            if (remainingMinutes == 0) {
+                timeLeft = hours + (hours == 1 ? " hour" : " hours");
+            } else {
+                timeLeft = hours + (hours == 1 ? " hour" : " hours") + " and " + remainingMinutes
+                        + (remainingMinutes == 1 ? " minute" : " minutes");
+            }
+        }
+
+        return timeLeft;
+
     }
 }
