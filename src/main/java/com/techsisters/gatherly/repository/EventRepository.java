@@ -1,5 +1,6 @@
 package com.techsisters.gatherly.repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -16,5 +17,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     List<Event> findByEventIdIn(List<Long> eventIds);
 
     Page<Event> findByCreatedBy(String createdBy, Pageable pageable);
+
+    List<Event> findByEventDateTimeBetweenAndReminderSentFalse(
+            OffsetDateTime start, OffsetDateTime end);
 
 }

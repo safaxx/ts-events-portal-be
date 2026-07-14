@@ -47,8 +47,11 @@ public class EventController extends ValidationExceptionHandler {
         eventRequest.setCreatedBy(userDetails.getUsername());
         eventRequest.setOrganizerEmail(userDetails.getUsername());
         Event event = eventService.createEvent(eventRequest);
+
         ResponseDTO response = new ResponseDTO();
         if (event != null) {
+            // send whatsapp notification
+
             response.setSuccess(true);
             response.setMessage("Event created successfully.");
         } else {

@@ -77,8 +77,7 @@ public class EmailService {
                 "eventType", eventType,
                 "eventLocation", eventLocation != null ? eventLocation : "",
                 "eventLink", eventLink != null ? eventLink : "",
-                "duration", duration != null ? duration : 60
-        );
+                "duration", duration != null ? duration : 60);
 
         String subject = "⏰ Reminder: " + eventTitle + " starts in 30 minutes!";
         String templateName = "event-reminder-email.html";

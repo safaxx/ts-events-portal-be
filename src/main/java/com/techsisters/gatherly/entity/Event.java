@@ -1,15 +1,18 @@
 package com.techsisters.gatherly.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
 
 @Entity
 @Table(name = "events")
@@ -42,8 +45,10 @@ public class Event {
     private String createdBy;
     private LocalDateTime updatedDate;
     private String eventHostName;
+    private boolean reminderSent;
 
-//    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<EventRSVP> rsvps = new ArrayList<>();
+    // @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval =
+    // true)
+    // private List<EventRSVP> rsvps = new ArrayList<>();
 
 }

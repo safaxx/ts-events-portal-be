@@ -34,6 +34,7 @@ public class EventService {
 
     public Event createEvent(EventRequest eventRequest) {
         Event event = eventMapper.convertToEntity(eventRequest);
+        event.setReminderSent(false);
         return eventRepository.save(event);
     }
 
@@ -142,6 +143,7 @@ public class EventService {
         existingEvent.setDuration(eventRequest.getDuration());
         existingEvent.setEventLocation(eventRequest.getEventLocation());
         existingEvent.setEventLink(eventRequest.getEventLink());
+
         try {
             existingEvent.setEventDateTime(OffsetDateTime.parse(eventRequest.getEventDateTime()));
         } catch (Exception e) {
@@ -152,6 +154,9 @@ public class EventService {
             existingEvent.setTimezone(eventRequest.getTimezone());
         }
         existingEvent.setUpdatedDate(LocalDateTime.now());
+
+        // set reminder to false to trigger the notification again
+        existingEvent.setReminderSent(false);
         return eventRepository.save(existingEvent);
     }
 
@@ -170,5 +175,12 @@ public class EventService {
         }
 
         eventRepository.delete(event);
+    }
+
+    public List<Event> getEventsForReminder(OffsetDateTime start, OffsetDateTime end) {
+
+        List<Event> upcomingEvents = eventRepository
+                .findByEventDateTimeBetweenAndReminderSentFalse(start, end);
+        return upcomingEvents;
     }
 }
