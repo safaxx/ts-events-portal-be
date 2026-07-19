@@ -38,7 +38,7 @@ public class Event {
     private String eventType;
     private String eventHostEmail;
     private String organizerEmail;
-    private String tags;
+    //private String tags;
     private Integer duration;
     private String eventLink;
     private String eventLocation;

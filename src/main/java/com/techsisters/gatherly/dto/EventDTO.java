@@ -25,7 +25,7 @@ public class EventDTO {
     private LocalDateTime createdDate = LocalDateTime.now();
     private String timezone;
     private String organizerEmail;
-    private String tags;
+    //private String tags;
     private Integer duration;
     private String eventType;
     private String eventHostEmail;

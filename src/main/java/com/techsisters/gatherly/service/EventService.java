@@ -139,7 +139,7 @@ public class EventService {
         existingEvent.setLongDescription((eventRequest.getLongDescription()));
         existingEvent.setEventType(eventRequest.getEventType());
         existingEvent.setEventHostEmail(eventRequest.getEventHostEmail());
-        existingEvent.setTags(eventRequest.getTags());
+        //existingEvent.setTags(eventRequest.getTags());
         existingEvent.setDuration(eventRequest.getDuration());
         existingEvent.setEventLocation(eventRequest.getEventLocation());
         existingEvent.setEventLink(eventRequest.getEventLink());

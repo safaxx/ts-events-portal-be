@@ -49,7 +49,7 @@ public class EventMapper {
         event.setEventLocation(request.getEventLocation());
         event.setCreatedBy(request.getCreatedBy());
         event.setDuration(request.getDuration());
-        event.setTags(request.getTags());
+        //event.setTags(request.getTags());
         event.setCreatedDate(LocalDateTime.now());
 
         try {
@@ -78,7 +78,7 @@ public class EventMapper {
             dto.setEventDateTime(e.getEventDateTime());
             dto.setDuration(e.getDuration());
             dto.setEventId(e.getEventId());
-            dto.setTags(e.getTags());
+            //dto.setTags(e.getTags());
             dto.setCreatedBy(e.getCreatedBy());
             dto.setAllRSVPs(countAllRSVPs(e.getEventId()));
             dto.setCurrentUserRSVP(checkUserRSVP(e, currentUserEmail));
@@ -109,7 +109,7 @@ public class EventMapper {
         dto.setEventHostName(e.getEventHostName());
         dto.setDuration(e.getDuration());
         dto.setEventId(e.getEventId());
-        dto.setTags(e.getTags());
+        //dto.setTags(e.getTags());
         dto.setCreatedBy(e.getCreatedBy());
         dto.setAllRSVPs(countAllRSVPs(e.getEventId()));
         dto.setEventLocation(e.getEventLocation());
