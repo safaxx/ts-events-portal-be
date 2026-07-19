@@ -67,13 +67,13 @@ public class EventRequest {
         @JsonProperty("duration")
         private Integer duration;
 
-        @JsonProperty("tags")
-        @Pattern(
-                regexp = "^[\\w-]+(?:[ ][\\w-]+)*(?:,\\s*[\\w-]+(?:[ ][\\w-]+)*)*$",
-                message = "Enter tags separated by commas without trailing commas"
-        )
-        @Length(max = 200, message = "Tags cannot exceed 200 characters")
-        private String tags;
+//        @JsonProperty("tags")
+//        @Pattern(
+//                regexp = "^[\\w-]+(?:[ ][\\w-]+)*(?:,\\s*[\\w-]+(?:[ ][\\w-]+)*)*$",
+//                message = "Enter tags separated by commas without trailing commas"
+//        )
+//        @Length(max = 200, message = "Tags cannot exceed 200 characters")
+//        private String tags;
 
         // @AssertTrue(message = "Event link is required for online events")
         // public boolean isOnlineEventValid() {
