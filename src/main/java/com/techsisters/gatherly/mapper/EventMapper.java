@@ -4,10 +4,14 @@ import com.techsisters.gatherly.dto.EventDTO;
 import com.techsisters.gatherly.dto.EventRSVPDTO;
 import com.techsisters.gatherly.entity.Event;
 import com.techsisters.gatherly.entity.EventRSVP;
+
+import com.techsisters.gatherly.dto.RecurrenceFrequency;
+import com.techsisters.gatherly.entity.EventRecurrence;
 import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.repository.EventRSVPRepository;
 import com.techsisters.gatherly.repository.UserRepository;
 import com.techsisters.gatherly.request.EventRequest;
+import com.techsisters.gatherly.request.RecurrenceRequest;
 import com.techsisters.gatherly.util.DateUtil;
 import com.techsisters.gatherly.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +20,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +57,8 @@ public class EventMapper {
         event.setDuration(request.getDuration());
         //event.setTags(request.getTags());
         event.setCreatedDate(LocalDateTime.now());
+        EventRecurrence recurrence = mapRecurrence(request.getRecurrence(), event);
+        event.setRecurrence(recurrence);
 
         try {
             event.setEventDateTime(OffsetDateTime.parse(request.getEventDateTime()));
@@ -59,6 +67,62 @@ public class EventMapper {
         }
 
         return event;
+    }
+
+    private EventRecurrence mapRecurrence(RecurrenceRequest request, Event event) {
+        if (request == null || !Boolean.TRUE.equals(request.getEnabled())) {
+            return null;
+        }
+
+        EventRecurrence recurrence = new EventRecurrence();
+        recurrence.setEvent(event);
+        recurrence.setEnabled(true);
+        recurrence.setFrequency(RecurrenceFrequency.valueOf(request.getFrequency().trim().toUpperCase()));
+        recurrence.setWeeklyDays(parseWeeklyDays(request.getWeeklyDays()));
+        recurrence.setMonthlyDay(request.getMonthlyDay());
+        recurrence.setEndDate(request.getEndDate());
+
+        return recurrence;
+    }
+
+    private List<DayOfWeek> parseWeeklyDays(List<String> weeklyDays) {
+        if (weeklyDays == null || weeklyDays.isEmpty()) {
+            return null;
+        }
+        List<DayOfWeek> result = new ArrayList<>();
+        for (String day : weeklyDays) {
+            result.add(DayOfWeek.valueOf(day.trim().toUpperCase()));
+        }
+        return result;
+    }
+
+    /**
+     * Build a new occurrence Event for a recurring series, copying all
+     * descriptive fields from the first (template) occurrence but pointing
+     * to a different date/time. Deliberately does NOT copy the recurrence
+     * rule itself (Event.recurrence) since that's a strict one-to-one and
+     * only the first occurrence owns it — occurrences are linked instead via
+     * recurrenceGroupId.
+     */
+    public Event cloneForOccurrence(Event template, OffsetDateTime occurrenceDateTime, String recurrenceGroupId) {
+        Event occurrence = new Event();
+        occurrence.setTitle(template.getTitle());
+        occurrence.setShortDescription(template.getShortDescription());
+        occurrence.setLongDescription(template.getLongDescription());
+        occurrence.setOrganizerEmail(template.getOrganizerEmail());
+        occurrence.setTimezone(template.getTimezone());
+        occurrence.setEventType(template.getEventType());
+        occurrence.setEventHostEmail(template.getEventHostEmail());
+        occurrence.setEventHostName(template.getEventHostName());
+        occurrence.setEventLink(template.getEventLink());
+        occurrence.setEventLocation(template.getEventLocation());
+        occurrence.setCreatedBy(template.getCreatedBy());
+        occurrence.setDuration(template.getDuration());
+        occurrence.setCreatedDate(LocalDateTime.now());
+        occurrence.setEventDateTime(occurrenceDateTime);
+        occurrence.setReminderSent(false);
+        occurrence.setRecurrenceGroupId(recurrenceGroupId);
+        return occurrence;
     }
 
     public List<EventDTO> getEvents(List<Event> events) {

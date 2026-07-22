@@ -67,6 +67,9 @@ public class EventRequest {
         @JsonProperty("duration")
         private Integer duration;
 
+        @JsonProperty("recurrence")
+        private RecurrenceRequest recurrence;
+
 //        @JsonProperty("tags")
 //        @Pattern(
 //                regexp = "^[\\w-]+(?:[ ][\\w-]+)*(?:,\\s*[\\w-]+(?:[ ][\\w-]+)*)*$",
