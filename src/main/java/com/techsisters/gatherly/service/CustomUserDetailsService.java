@@ -31,7 +31,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         log.debug("User found: {}", user.getEmail());
 
-        // Wrap the User entity in CustomUserDetails
         return new CustomUserDetails(user);
 
     }

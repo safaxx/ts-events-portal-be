@@ -1,10 +1,12 @@
 package com.techsisters.gatherly.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+import com.techsisters.gatherly.request.RecurrenceRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -32,14 +34,142 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventRSVPRepository eventRSVPRepository;
 
+    // Safety cap so a bad/missing end date can't generate unbounded rows.
+    private static final int MAX_RECURRING_OCCURRENCES = 365;
+
     public Event createEvent(EventRequest eventRequest) {
         Event event = eventMapper.convertToEntity(eventRequest);
         event.setReminderSent(false);
-        return eventRepository.save(event);
+
+        RecurrenceRequest recurrenceRequest = eventRequest.getRecurrence();
+        boolean isRecurring = recurrenceRequest != null && Boolean.TRUE.equals(recurrenceRequest.getEnabled());
+
+        if (!isRecurring) {
+            return eventRepository.save(event);
+        }
+
+        return createRecurringEvent(event, recurrenceRequest);
+    }
+
+    /**
+     * Creates a recurring series: the first occurrence is saved with the
+     * EventRecurrence rule attached (satisfies the strict one-to-one), and
+     * every subsequent occurrence is a plain Event row sharing the same
+     * recurrenceGroupId.
+     */
+    private Event createRecurringEvent(Event firstOccurrence, RecurrenceRequest recurrenceRequest) {
+        if (recurrenceRequest.getEndDate() == null) {
+            throw new IllegalArgumentException("End date is required for recurring events");
+        }
+        if (recurrenceRequest.getFrequency() == null || recurrenceRequest.getFrequency().isBlank()) {
+            throw new IllegalArgumentException("Frequency is required for recurring events");
+        }
+
+        OffsetDateTime firstDateTime = firstOccurrence.getEventDateTime();
+        if (recurrenceRequest.getEndDate().isBefore(firstDateTime.toLocalDate())) {
+            throw new IllegalArgumentException("Recurrence end date cannot be before the event's start date");
+        }
+
+        List<OffsetDateTime> occurrenceDates = generateOccurrenceDates(firstDateTime, recurrenceRequest);
+
+        String recurrenceGroupId = UUID.randomUUID().toString();
+        firstOccurrence.setRecurrenceGroupId(recurrenceGroupId);
+
+        Event savedFirstOccurrence = eventRepository.save(firstOccurrence);
+
+        List<Event> remainingOccurrences = new ArrayList<>();
+        for (int i = 1; i < occurrenceDates.size(); i++) {
+            remainingOccurrences.add(
+                    eventMapper.cloneForOccurrence(savedFirstOccurrence, occurrenceDates.get(i), recurrenceGroupId));
+        }
+        if (!remainingOccurrences.isEmpty()) {
+            eventRepository.saveAll(remainingOccurrences);
+        }
+
+        return savedFirstOccurrence;
+    }
+
+    /**
+     * Computes every occurrence date/time for a recurrence rule, starting
+     * from (and including) the first occurrence, up to and including the
+     * rule's end date, capped at MAX_RECURRING_OCCURRENCES.
+     *
+     * NOTE: assumes RecurrenceFrequency has DAILY / WEEKLY / MONTHLY constants.
+     * Adjust the switch below if your enum uses different names.
+     */
+    private List<OffsetDateTime> generateOccurrenceDates(OffsetDateTime start, RecurrenceRequest recurrenceRequest) {
+        List<OffsetDateTime> dates = new ArrayList<>();
+        LocalDate endDate = recurrenceRequest.getEndDate();
+        String frequency = recurrenceRequest.getFrequency().trim().toUpperCase();
+
+        switch (frequency) {
+            case "DAILY" -> {
+                OffsetDateTime current = start;
+                while (!current.toLocalDate().isAfter(endDate) && dates.size() < MAX_RECURRING_OCCURRENCES) {
+                    dates.add(current);
+                    current = current.plusDays(1);
+                }
+            }
+            case "WEEKLY" -> {
+                Set<DayOfWeek> targetDays = parseWeeklyDays(recurrenceRequest.getWeeklyDays(), start.getDayOfWeek());
+                OffsetDateTime current = start;
+                while (!current.toLocalDate().isAfter(endDate) && dates.size() < MAX_RECURRING_OCCURRENCES) {
+                    if (targetDays.contains(current.getDayOfWeek())) {
+                        dates.add(current);
+                    }
+                    current = current.plusDays(1);
+                }
+            }
+            case "MONTHLY" -> {
+                int dayOfMonth = recurrenceRequest.getMonthlyDay() != null
+                        ? recurrenceRequest.getMonthlyDay()
+                        : start.getDayOfMonth();
+                OffsetDateTime current = start;
+                while (!current.toLocalDate().isAfter(endDate) && dates.size() < MAX_RECURRING_OCCURRENCES) {
+                    dates.add(current);
+                    current = nextMonthlyOccurrence(current, dayOfMonth);
+                }
+            }
+            default -> throw new IllegalArgumentException("Unsupported recurrence frequency: " + recurrenceRequest.getFrequency());
+        }
+
+        if (dates.isEmpty()) {
+            // Rule produced no matches before the end date (e.g. weekly day
+            // already passed for this week) — always keep the original date.
+            dates.add(start);
+        }
+        return dates;
+    }
+
+    private Set<DayOfWeek> parseWeeklyDays(List<String> weeklyDays, DayOfWeek fallback) {
+        if (weeklyDays == null || weeklyDays.isEmpty()) {
+            return EnumSet.of(fallback);
+        }
+        Set<DayOfWeek> result = EnumSet.noneOf(DayOfWeek.class);
+        for (String day : weeklyDays) {
+            result.add(DayOfWeek.valueOf(day.trim().toUpperCase()));
+        }
+        return result;
+    }
+
+    /**
+     * Given the current occurrence, finds the same day-of-month in the
+     * following month, clamping to the last valid day if the target day
+     * doesn't exist there (e.g. day 31 in a 30-day month).
+     */
+    private OffsetDateTime nextMonthlyOccurrence(OffsetDateTime current, int targetDay) {
+        OffsetDateTime firstOfNextMonth = current.withDayOfMonth(1).plusMonths(1);
+        int lastDayOfNextMonth = firstOfNextMonth.toLocalDate().lengthOfMonth();
+        int actualDay = Math.min(targetDay, lastDayOfNextMonth);
+        return firstOfNextMonth
+                .withDayOfMonth(actualDay)
+                .withHour(current.getHour())
+                .withMinute(current.getMinute())
+                .withSecond(current.getSecond());
     }
 
     public Page<EventDTO> getAllEvents(int pageNo, int pageSize, EventDTO.ListType listType, String searchQuery) {
-        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime").descending());
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime"));
 
         Page<Event> events = eventRepository.findAll(EventSpecification.filter(listType, searchQuery), paging);
 
@@ -179,8 +309,7 @@ public class EventService {
 
     public List<Event> getEventsForReminder(OffsetDateTime start, OffsetDateTime end) {
 
-        List<Event> upcomingEvents = eventRepository
+        return eventRepository
                 .findByEventDateTimeBetweenAndReminderSentFalse(start, end);
-        return upcomingEvents;
     }
 }

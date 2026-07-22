@@ -35,7 +35,7 @@ public class EventDTO {
     private Boolean currentUserRSVP;
     private String eventLink;
     private String eventLocation;
-
+    private RecurrenceDTO recurrence;
     private String googleCalendarLink;
 
     public String getGoogleCalendarLink() {

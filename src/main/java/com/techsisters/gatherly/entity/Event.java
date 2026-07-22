@@ -3,12 +3,7 @@ package com.techsisters.gatherly.entity;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,6 +41,14 @@ public class Event {
     private LocalDateTime updatedDate;
     private String eventHostName;
     private boolean reminderSent;
+    @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private EventRecurrence recurrence;
+
+    // Shared across all occurrences generated from the same recurrence rule.
+    // Null for one-off (non-recurring) events. Only the first occurrence in a
+    // series carries the actual EventRecurrence rule (see above), since that's
+    // a strict one-to-one; every other occurrence just carries this group id.
+    private String recurrenceGroupId;
 
     // @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval =
     // true)
