@@ -46,11 +46,11 @@ public class EventSpecification {
                     Predicate hostNameMatch = criteriaBuilder.like(
                             criteriaBuilder.lower(root.get("eventHostName")), likePattern);
 
-                    Predicate tagsMatch = criteriaBuilder.like(
-                            criteriaBuilder.lower(root.get("tags")), likePattern);
+                    // Predicate tagsMatch = criteriaBuilder.like(
+                    // criteriaBuilder.lower(root.get("tags")), likePattern);
 
                     predicate = criteriaBuilder.and(predicate,
-                            criteriaBuilder.or(titleMatch, hostNameMatch, tagsMatch));
+                            criteriaBuilder.or(titleMatch, hostNameMatch));
 
                 }
                 return predicate;
