@@ -4,9 +4,13 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-import com.techsisters.gatherly.request.RecurrenceRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +28,7 @@ import com.techsisters.gatherly.repository.EventRepository;
 import com.techsisters.gatherly.repository.EventSpecification;
 import com.techsisters.gatherly.request.EventRSVPRequest;
 import com.techsisters.gatherly.request.EventRequest;
+import com.techsisters.gatherly.request.RecurrenceRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -130,7 +135,8 @@ public class EventService {
                     current = nextMonthlyOccurrence(current, dayOfMonth);
                 }
             }
-            default -> throw new IllegalArgumentException("Unsupported recurrence frequency: " + recurrenceRequest.getFrequency());
+            default -> throw new IllegalArgumentException(
+                    "Unsupported recurrence frequency: " + recurrenceRequest.getFrequency());
         }
 
         if (dates.isEmpty()) {
@@ -169,7 +175,7 @@ public class EventService {
     }
 
     public Page<EventDTO> getAllEvents(int pageNo, int pageSize, EventDTO.ListType listType, String searchQuery) {
-        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime"));
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("eventDateTime").descending());
 
         Page<Event> events = eventRepository.findAll(EventSpecification.filter(listType, searchQuery), paging);
 
@@ -269,7 +275,7 @@ public class EventService {
         existingEvent.setLongDescription((eventRequest.getLongDescription()));
         existingEvent.setEventType(eventRequest.getEventType());
         existingEvent.setEventHostEmail(eventRequest.getEventHostEmail());
-        //existingEvent.setTags(eventRequest.getTags());
+        // existingEvent.setTags(eventRequest.getTags());
         existingEvent.setDuration(eventRequest.getDuration());
         existingEvent.setEventLocation(eventRequest.getEventLocation());
         existingEvent.setEventLink(eventRequest.getEventLink());
