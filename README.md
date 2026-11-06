@@ -20,7 +20,7 @@ across time zones and busy schedules — without the usual confusion of event pl
 
 ## 🛠️ Built With
 
-- **Spring Boot (Java)** – Backend APIs  
+- **Spring Boot (Java 25 LTS)** – Backend APIs (Java 25 required to build and run)
 - **React.js** – Frontend interface  
 - **PostgreSQL** – Database  
 - **Deployment** – Render

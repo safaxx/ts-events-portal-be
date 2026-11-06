@@ -1,6 +1,6 @@
 # --- Stage 1: Build ---
-# Using a slightly simplified, but still specific, Temurin 21 Maven build image
-FROM maven:3-eclipse-temurin-21-alpine AS build
+# Using a Temurin 25 Maven build image
+FROM maven:3-eclipse-temurin-25-alpine AS build
 
 WORKDIR /app
 
@@ -12,8 +12,8 @@ RUN mvn clean package -DskipTests
 
 
 # --- Stage 2: Runtime ---
-# Using the specific Eclipse Temurin 21 JRE Alpine image
-FROM eclipse-temurin:21-jre-alpine
+# Using the Eclipse Temurin 25 JRE Alpine image
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
