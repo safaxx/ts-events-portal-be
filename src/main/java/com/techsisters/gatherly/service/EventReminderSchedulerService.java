@@ -39,7 +39,7 @@ public class EventReminderSchedulerService {
     private static final String TECH_SISTERS_EVENTS_URL = "https://www.tech-sisters.com/events";
 
     // Run every 5 minutes
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     public void sendEventReminders() {
         log.info("Running event reminder scheduler...");
 
