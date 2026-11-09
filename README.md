@@ -43,3 +43,11 @@ We’re working on:
 - RSVP tracking  
 - Smart reminders and notifications  
 - Calendar integration  
+
+## Local OTP email mock
+
+For local development, activate the Spring `local` profile by setting
+`SPRING_PROFILES_ACTIVE=local` in your run configuration. OTP emails are then
+rendered and logged by the local email mock instead of being sent through
+Mailgun; look in the application logs for the OTP. Login continues to validate
+the OTP normally. Do not enable this profile in deployed environments.

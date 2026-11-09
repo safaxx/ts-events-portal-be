@@ -20,8 +20,10 @@ public class User extends AbstractAuditablePersistable {
     private String name;
     private int otp;
     private Date otpCreatedDate;
+
     @Column(unique = true, nullable = false)
     private String email;
+    
     private String country;
     private String role;
     private String state;

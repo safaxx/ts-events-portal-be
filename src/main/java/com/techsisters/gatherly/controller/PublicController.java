@@ -2,6 +2,8 @@ package com.techsisters.gatherly.controller;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -12,13 +14,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.techsisters.gatherly.dto.EventDTO;
+import com.techsisters.gatherly.dto.MentorProfileDTO;
 import com.techsisters.gatherly.dto.ResponseDTO;
+import com.techsisters.gatherly.entity.MentorProfile;
 import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.response.AllEventsResponse;
+import com.techsisters.gatherly.response.AllMentorsResponse;
 import com.techsisters.gatherly.response.EventDetailsResponse;
+import com.techsisters.gatherly.response.MentorProfileResponse;
 import com.techsisters.gatherly.service.EventService;
 import com.techsisters.gatherly.service.GoogleAuthService;
 import com.techsisters.gatherly.service.GoogleCalendarService;
+import com.techsisters.gatherly.service.MentorService;
 import com.techsisters.gatherly.service.UserService;
 import com.techsisters.gatherly.util.OAuthTokenNotFoundException;
 
@@ -28,13 +35,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/public/events")
-public class PublicEventController {
+@RequestMapping("/public")
+public class PublicController {
     private final EventService eventService;
 
     private final GoogleCalendarService googleCalendarService;
     private final GoogleAuthService authService;
     private final UserService userService;
+    private final MentorService mentorService;
 
     @GetMapping("/add-google-calendar-event")
     public ResponseEntity<Object> createCalendarEvent(@RequestParam("eventId") Long eventId,
@@ -97,7 +105,7 @@ public class PublicEventController {
         return ResponseEntity.ok().body(response);
     }
 
-    @GetMapping("/all")
+    @GetMapping("/all-events")
     public AllEventsResponse getAllEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
@@ -121,7 +129,7 @@ public class PublicEventController {
         return response;
     }
 
-    @GetMapping("/id")
+    @GetMapping("/event")
     public EventDetailsResponse getEventDetails(@RequestParam Long eventId) {
         EventDetailsResponse response = new EventDetailsResponse();
         EventDTO dto = eventService.getEventDetails(eventId);
@@ -133,5 +141,35 @@ public class PublicEventController {
             response.setSuccess(false);
         }
         return response;
+    }
+
+    // displacy all mentors
+    @GetMapping("/all-mentors")
+    public AllMentorsResponse getAllMentors() {
+        AllMentorsResponse response = new AllMentorsResponse();
+        List<MentorProfile> mentors = mentorService.getAllMentors();
+        if (mentors == null || mentors.isEmpty()) {
+            response.setSuccess(false);
+            response.setMessage("Mentors Not Found");
+        }
+        response.setSuccess(true);
+        response.setMentors(mentors);
+        response.setMessage("Data returned successfully");
+        return response;
+    }
+
+    @GetMapping("/mentor")
+    public MentorProfileResponse getMentorProfileDetails(@RequestParam Long mentorId) {
+        MentorProfileResponse response = new MentorProfileResponse();
+        MentorProfileDTO dto = mentorService.getMentorProfileDetails(mentorId);
+        if (dto == null) {
+            response.setSuccess(false);
+            response.setMessage("Mentor Profile Not Found.");
+        }
+        response.setSuccess(true);
+        response.setMessage("Found Mentor Profile");
+        response.setMentorDTO(dto);
+        return response;
+
     }
 }
