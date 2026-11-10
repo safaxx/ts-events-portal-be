@@ -1,0 +1,13 @@
+package com.techsisters.gatherly.response;
+
+import com.techsisters.gatherly.dto.MentorProfileDTO;
+import com.techsisters.gatherly.dto.ResponseDTO;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class MentorProfileResponse extends ResponseDTO {
+    private MentorProfileDTO mentor;
+}

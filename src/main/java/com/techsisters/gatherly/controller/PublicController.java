@@ -2,23 +2,33 @@ package com.techsisters.gatherly.controller;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.techsisters.gatherly.dto.EventDTO;
+import com.techsisters.gatherly.dto.MentorProfileDTO;
 import com.techsisters.gatherly.dto.ResponseDTO;
+import com.techsisters.gatherly.dto.SpecialtyDTO;
 import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.response.AllEventsResponse;
+import com.techsisters.gatherly.response.AllMentorsResponse;
 import com.techsisters.gatherly.response.EventDetailsResponse;
+import com.techsisters.gatherly.response.MentorProfileResponse;
 import com.techsisters.gatherly.service.EventService;
 import com.techsisters.gatherly.service.GoogleAuthService;
 import com.techsisters.gatherly.service.GoogleCalendarService;
+import com.techsisters.gatherly.service.MentorService;
 import com.techsisters.gatherly.service.UserService;
 import com.techsisters.gatherly.util.OAuthTokenNotFoundException;
 
@@ -28,13 +38,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/public/events")
-public class PublicEventController {
+@RequestMapping("/public")
+public class PublicController {
     private final EventService eventService;
 
     private final GoogleCalendarService googleCalendarService;
     private final GoogleAuthService authService;
     private final UserService userService;
+    private final MentorService mentorService;
 
     @GetMapping("/add-google-calendar-event")
     public ResponseEntity<Object> createCalendarEvent(@RequestParam("eventId") Long eventId,
@@ -97,7 +108,7 @@ public class PublicEventController {
         return ResponseEntity.ok().body(response);
     }
 
-    @GetMapping("/all")
+    @GetMapping("/all-events")
     public AllEventsResponse getAllEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
@@ -121,7 +132,7 @@ public class PublicEventController {
         return response;
     }
 
-    @GetMapping("/id")
+    @GetMapping("/event")
     public EventDetailsResponse getEventDetails(@RequestParam Long eventId) {
         EventDetailsResponse response = new EventDetailsResponse();
         EventDTO dto = eventService.getEventDetails(eventId);
@@ -132,6 +143,40 @@ public class PublicEventController {
         } else {
             response.setSuccess(false);
         }
+        return response;
+    }
+
+    // ---------------- Mentors (visible to everyone) ----------------
+    // userDetails is null for visitors who aren't logged in. The JWT filter still
+    // authenticates /public/** requests that carry a valid token, so logged-in
+    // members are recognised here and get to see meeting links.
+
+    // ?available=true shows only mentors who are on a call right now.
+    @GetMapping("/mentors")
+    public AllMentorsResponse getAllMentors(@RequestParam(defaultValue = "false") boolean available,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<MentorProfileDTO> mentors = mentorService.getAllMentors(available, userDetails != null);
+        AllMentorsResponse response = new AllMentorsResponse();
+        response.setMentors(mentors);
+        response.setSuccess(true);
+        response.setMessage(mentors.isEmpty() ? "No mentors found" : "Data returned successfully");
+        return response;
+    }
+
+    // Specialty list for filters and for the admin's create-mentor form.
+    @GetMapping("/mentors/specialties")
+    public List<SpecialtyDTO> getAllSpecialties() {
+        return mentorService.getAllSpecialties();
+    }
+
+    // {id:\\d+} only matches digits, so it never clashes with /mentors/specialties.
+    @GetMapping("/mentors/{id:\\d+}")
+    public MentorProfileResponse getMentorProfile(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        MentorProfileResponse response = new MentorProfileResponse();
+        response.setMentor(mentorService.getMentorProfileDetails(id, userDetails != null));
+        response.setSuccess(true);
+        response.setMessage("Data returned successfully");
         return response;
     }
 }

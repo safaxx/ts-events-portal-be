@@ -75,7 +75,7 @@ public class SpringApiSecurityConfig {
                         // Whitelist your "send-otp" and other auth endpoints
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2callback/**").permitAll()
-                        .requestMatchers("/public/events/**").permitAll()
+                        .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         // Whitelist static resources
                         .requestMatchers("/", "/index.html", "/static/**").permitAll()
