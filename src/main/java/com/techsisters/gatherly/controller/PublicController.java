@@ -8,7 +8,10 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.techsisters.gatherly.dto.EventDTO;
 import com.techsisters.gatherly.dto.MentorProfileDTO;
 import com.techsisters.gatherly.dto.ResponseDTO;
-import com.techsisters.gatherly.entity.MentorProfile;
+import com.techsisters.gatherly.dto.SpecialtyDTO;
 import com.techsisters.gatherly.entity.User;
 import com.techsisters.gatherly.response.AllEventsResponse;
 import com.techsisters.gatherly.response.AllMentorsResponse;
@@ -143,33 +146,37 @@ public class PublicController {
         return response;
     }
 
-    // displacy all mentors
-    @GetMapping("/all-mentors")
-    public AllMentorsResponse getAllMentors() {
+    // ---------------- Mentors (visible to everyone) ----------------
+    // userDetails is null for visitors who aren't logged in. The JWT filter still
+    // authenticates /public/** requests that carry a valid token, so logged-in
+    // members are recognised here and get to see meeting links.
+
+    // ?available=true shows only mentors who are on a call right now.
+    @GetMapping("/mentors")
+    public AllMentorsResponse getAllMentors(@RequestParam(defaultValue = "false") boolean available,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<MentorProfileDTO> mentors = mentorService.getAllMentors(available, userDetails != null);
         AllMentorsResponse response = new AllMentorsResponse();
-        List<MentorProfile> mentors = mentorService.getAllMentors();
-        if (mentors == null || mentors.isEmpty()) {
-            response.setSuccess(false);
-            response.setMessage("Mentors Not Found");
-        }
-        response.setSuccess(true);
         response.setMentors(mentors);
-        response.setMessage("Data returned successfully");
+        response.setSuccess(true);
+        response.setMessage(mentors.isEmpty() ? "No mentors found" : "Data returned successfully");
         return response;
     }
 
-    @GetMapping("/mentor")
-    public MentorProfileResponse getMentorProfileDetails(@RequestParam Long mentorId) {
-        MentorProfileResponse response = new MentorProfileResponse();
-        MentorProfileDTO dto = mentorService.getMentorProfileDetails(mentorId);
-        if (dto == null) {
-            response.setSuccess(false);
-            response.setMessage("Mentor Profile Not Found.");
-        }
-        response.setSuccess(true);
-        response.setMessage("Found Mentor Profile");
-        response.setMentorDTO(dto);
-        return response;
+    // Specialty list for filters and for the admin's create-mentor form.
+    @GetMapping("/mentors/specialties")
+    public List<SpecialtyDTO> getAllSpecialties() {
+        return mentorService.getAllSpecialties();
+    }
 
+    // {id:\\d+} only matches digits, so it never clashes with /mentors/specialties.
+    @GetMapping("/mentors/{id:\\d+}")
+    public MentorProfileResponse getMentorProfile(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        MentorProfileResponse response = new MentorProfileResponse();
+        response.setMentor(mentorService.getMentorProfileDetails(id, userDetails != null));
+        response.setSuccess(true);
+        response.setMessage("Data returned successfully");
+        return response;
     }
 }

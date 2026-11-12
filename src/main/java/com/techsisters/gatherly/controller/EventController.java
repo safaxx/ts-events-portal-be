@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/events")
-public class EventController extends ValidationExceptionHandler {
+public class EventController {
     private final EventService eventService;
 
     @PreAuthorize("hasRole('ADMIN')")
